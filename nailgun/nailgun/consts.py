@@ -143,6 +143,7 @@ TASK_NAMES = Enum(
     'check_dhcp',
     'verify_network_connectivity',
     'multicast_verification',
+    'icmp_verification',
 
     # dump
     'dump',

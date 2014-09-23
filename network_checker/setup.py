@@ -43,6 +43,7 @@ setuptools.setup(
         ],
         'network_checker': [
             'multicast = network_checker.multicast.api:MulticastChecker',
+            'icmp = network_checker.icmp_check.api:ICMPChecker',
             'simple = network_checker.tests.simple:SimpleChecker'
         ]
     },

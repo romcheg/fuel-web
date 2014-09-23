@@ -11,3 +11,10 @@ multicast:
         repeat: 3
         iface: eth0
         timeout: 10
+icmp:
+    app: icmp_check
+    pidfile: /var/run/icmp_check.pid
+    defaults:
+        repeat: 3
+        iface: eth0
+        cookie: FUEL

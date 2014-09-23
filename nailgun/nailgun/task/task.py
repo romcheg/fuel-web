@@ -546,6 +546,9 @@ class MulticastVerificationTask(BaseNetworkVerification):
         return False
 
 
+class ICMPVerificationTask(BaseNetworkVerification):
+    """Task for ICMP verification."""
+
 class CheckNetworksTask(object):
 
     @classmethod

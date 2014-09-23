@@ -710,6 +710,11 @@ class VerifyNetworksTaskManager(TaskManager):
                 verify_task.add_subtask(
                     tasks.MulticastVerificationTask(multicast))
 
+            if tasks.ICMPVerificationTask.enabled(self.cluster):
+                icmp = objects.task.Task.create_subtask(
+                    task, name=TASK_NAMES.icmp_verification)
+                verify_task.add_subtask(tasks.ICMPVerificationTask(icmp)
+
             db().commit()
             self._call_silently(task, verify_task)
 
