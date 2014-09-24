@@ -548,6 +548,28 @@ class MulticastVerificationTask(BaseNetworkVerification):
 
 class ICMPVerificationTask(BaseNetworkVerification):
     """Task for ICMP verification."""
+    @classmethod
+    def enabled(cls, cluster):
+        # L3 network is only configured during the deployment
+        # so ICMP verification should be enabled only after it.
+        return cluster.status == CLUSTER_STATUSES.operational
+
+    def get_message_body(self):
+        nodes = []
+
+        for n in self.task.cluster.nodes:
+            node_json = {'uid': n.id, 'ifaces'=[], 'networks': []}
+
+            for nic in n.nic_interfaces:
+                node_json['ifaces'].append(nic.name)
+
+                for ng in nic.assigned_networks_list
+                    node_json['networks'].append(ng.cidr)
+
+            nodes.append(node_json)
+
+        return nodes
+
 
 class CheckNetworksTask(object):
 

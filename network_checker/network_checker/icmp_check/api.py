@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import netaddr
 import pcap
 import scapy.all as scapy
 
@@ -28,8 +29,8 @@ class ICMPChecker(object):
 
         icmp_filter = 'icmp and icmp[icmptype]=icmp-echoreply'
 
-        for net in self.config['networks']:
-            listener = pcap.pcap(net['iface'])
+        for iface in self.config['ifaces']:
+            listener = pcap.pcap(iface)
             listener.setfilter(icmp_filter)
 
             self.listeners.append(listener)
@@ -37,14 +38,12 @@ class ICMPChecker(object):
     def send(self):
         for net in self.config['networks']:
             for i in xrange(self.repeat):
-                # TODO(romcheg): L3 network is only configured during a deploy
-                bcast_addr = "NOT_IMPLEMENTED"
+                ipnet = netaddr.IPNetwork(net)
+
+                bcast_addr = str(ipnet.broadcast)
                 cookie = '_'.join([self.config.cookie, self.config['uid']])
 
                 scapy.send(IP(bcast_addr)/scapy.ICMP()/self.control_msg)
-
-    def clean(self):
-        raise NotImplemented("DEADBEEF")
 
     def test(self):
         raise NotImplemented("DEADBEEF")
@@ -56,8 +55,10 @@ class ICMPChecker(object):
                 pack = scapy.Ether(pack)
                 data, _ = pack[scapy.ICMP].extract_padding(pack[scapy.ICMP].load)
 
-                # Filter only ICMP requests with the cookie
-                if self.cookie in data:
+                # Filter only ICMP requests from different nodes
+                # with the cookie.
+                if self.config['cookie'] in data and
+                   self.config['uid'] not in data:
                     messages.append(data.decode())
 
         return list(set(messages))

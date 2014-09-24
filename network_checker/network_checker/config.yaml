@@ -16,5 +16,6 @@ icmp:
     pidfile: /var/run/icmp_check.pid
     defaults:
         repeat: 3
-        iface: eth0
+        ifaces:
+            - eth0
         cookie: FUEL
