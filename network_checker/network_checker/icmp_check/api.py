@@ -59,12 +59,13 @@ class ICMPChecker(object):
                 data, _ = pack[scapy.ICMP].extract_padding(
                         pack[scapy.ICMP].load)
 
+                cookie = json.loads(data.decode())
+
                 # Filter only ICMP requests from other nodes
                 # with the cookie.
-                if self.config['cookie'] in data and
-                    self.config['uid'] not in data:
+                if self.config['cookie'] in cookie and
+                    self.config['uid'] not in cookie:
 
-                    cookie = json.loads(data.decode())
                     messages.append(cookie)
 
         return list(set(messages))
