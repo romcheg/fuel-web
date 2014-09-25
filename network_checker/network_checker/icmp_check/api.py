@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import netaddr
 import pcap
 import scapy.all as scapy
@@ -41,9 +42,11 @@ class ICMPChecker(object):
                 ipnet = netaddr.IPNetwork(net)
 
                 bcast_addr = str(ipnet.broadcast)
-                cookie = '_'.join([self.config.cookie, self.config['uid']])
+                cookie = json.dumps({'cookie': self.config['cookie'],
+                                     'net': net,
+                                     'uid': self.config['uid']})
 
-                scapy.send(IP(bcast_addr)/scapy.ICMP()/self.control_msg)
+                scapy.send(IP(bcast_addr)/scapy.ICMP()/cookie)
 
     def test(self):
         raise NotImplemented("DEADBEEF")
@@ -53,12 +56,15 @@ class ICMPChecker(object):
         for listener in self.listeners:
             for sock, pack in self.listener.readpkts():
                 pack = scapy.Ether(pack)
-                data, _ = pack[scapy.ICMP].extract_padding(pack[scapy.ICMP].load)
+                data, _ = pack[scapy.ICMP].extract_padding(
+                        pack[scapy.ICMP].load)
 
-                # Filter only ICMP requests from different nodes
+                # Filter only ICMP requests from other nodes
                 # with the cookie.
                 if self.config['cookie'] in data and
-                   self.config['uid'] not in data:
-                    messages.append(data.decode())
+                    self.config['uid'] not in data:
+
+                    cookie = json.loads(data.decode())
+                    messages.append(cookie)
 
         return list(set(messages))

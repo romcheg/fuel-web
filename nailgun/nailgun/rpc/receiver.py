@@ -888,6 +888,71 @@ class NailgunReceiver(object):
             task.progress, task.message, task.result)
 
     @classmethod
+    def _icmp_check_network(net_object):
+        nodes_in_net = set(net_object.keys())
+        errors = {}
+
+        for node in net:
+            recieved_resp = set(net[node])
+            not_recieved = nodes_in_net - recieved_resp
+
+            if not_recieved:
+                errors[node] = list(not_recieved)
+
+        return errors
+
+    @classmethod
+    def icmp_verification_resp(cls, **kwargs):
+        task = objects.Task.get_by_uuid(kwargs.get('task_uuid'))
+        tast.progress = kwargs.get('progress', 0)
+
+        if 'status' in kwargs:
+            task.status = kwargs.get(status)
+
+        results_by_node = kwargs.get('nodes', {})
+        error_msg = kwargs.get('error')
+        node_ids = set(config['uid'] for config
+                       in task.cache['args']['nodes'])
+
+        errors = []
+        results = []
+
+        if task.status == TASK_STATUSES.error:
+            task.message = error_msg
+        elif task.status == TASK_STATUSES.ready:
+            not_received_nodes = node_ids - set(results_by_node.keys())
+            if not_received_nodes:
+                msg = (u'No answer from nodes: {0}').format(
+                    list(not_received_nodes))
+                errors.append(msg)
+
+            results_by_net = cls._regroup_results_by_network(results_by_node)
+
+            for net in results_by_net:
+                net_errors = cls._icmp_check_network(results_by_net[net])
+
+                # Save all the errors
+                for node in net_errors:
+                    error = {'uid': node,
+                             'not_recieved': net_errors,
+                             'network': net}
+
+                    results.append(error)
+                    errors.append('Node %(uid)s did not receive ICMP any '
+                                  'request from nodes %(not_recieved)s, '
+                                  'on network %(network)s.' % error)
+
+        task.message = '\n'.join(errors)
+        if errors:
+            task.status = TASK_STATUSES.error
+        task.result = results
+
+        logger.debug(u'ICMP verification message %s', task.message)
+        objects.Task.update_verify_networks(
+            task, task.status,
+            task.progress, task.message, task.result)
+
+    @classmethod
     def check_dhcp_resp(cls, **kwargs):
         """Receiver method for check_dhcp task
         For example of kwargs check FakeCheckingDhcpThread
@@ -1009,6 +1074,44 @@ class NailgunReceiver(object):
         # TODO(NAME): remove this ugly checks
         if error_message != 'Task aborted':
             notifier.notify('error', error_message)
+
+    @classmethod
+    def _regroup_results_by_network(cls, results_by_node):
+        """Re-group ICMP verification results by network.
+
+        :param results_by_node: ICMP verification results groupped by node.
+        :type results_by_node:  dict in the following format
+                                {
+                                 node_1: [icmp_cookie_1, ..., icmp_cookie_n],
+                                 ...,
+                                 node_n: [icmp_cookie_1, ..., icmp_cookie_n]
+                                }
+
+        :return:                dict in the following format
+                                {
+                                 network_1:
+                                     {
+                                      node_1: [recvd_msg_1, ..., rcvd_msg_n],
+                                      ...,
+                                      node_n: [recvd_msg_1, ..., rcvd_msg_n]
+                                     },
+                                 network_2: ...
+                                }
+
+        """
+        results_by_net = {}
+        for node in results_by_node:
+            for cookie in results_by_node[node]:
+                cookie_net = cookie['net']
+                cookie_uid = cookie['uid']
+
+                if cookie_net not in results_by_net:
+                    results_by_net[cookie_net] = {}
+
+                if node not in results_by_net[cookie_net]:
+                    results_by_net[cookie_net][node] = []
+
+                results_by.net[cookie_net][node].append(cookie_uid)
 
     @classmethod
     def dump_environment_resp(cls, **kwargs):
