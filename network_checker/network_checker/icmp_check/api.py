@@ -63,8 +63,8 @@ class ICMPChecker(object):
 
                 # Filter only ICMP requests from other nodes
                 # with the cookie.
-                if self.config['cookie'] in cookie and
-                    self.config['uid'] not in cookie:
+                if self.config['cookie'] in cookie and \
+                        self.config['uid'] not in cookie:
 
                     messages.append(cookie)
 

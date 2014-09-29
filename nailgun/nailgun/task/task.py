@@ -558,12 +558,12 @@ class ICMPVerificationTask(BaseNetworkVerification):
         nodes = []
 
         for n in self.task.cluster.nodes:
-            node_json = {'uid': n.id, 'ifaces'=[], 'networks': []}
+            node_json = {'uid': n.id, 'ifaces': [], 'networks': []}
 
             for nic in n.nic_interfaces:
                 node_json['ifaces'].append(nic.name)
 
-                for ng in nic.assigned_networks_list
+                for ng in nic.assigned_networks_list:
                     node_json['networks'].append(ng.cidr)
 
             nodes.append(node_json)
