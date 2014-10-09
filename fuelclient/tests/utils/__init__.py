@@ -10,23 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from collections import namedtuple
+from tests.utils import random_data
+from tests.utils import fake_node
 
 
-def Enum(*values, **kwargs):
-    names = kwargs.get('names')
-    if names:
-        return namedtuple('Enum', names)(*values)
-    return namedtuple('Enum', values)(*values)
+get_fake_node = fake_node.get_fake_node
+random_string = random_data.random_string
 
 
-LOAD_TESTS_PATHS = Enum(
-    '/tmp/fuelclient_load_tests/tests/',
-    '/tmp/fuelclient_load_tests/tests/last/',
-    '/tmp/fuelclient_load_tests/results/',
-    names=(
-        'load_tests_base',
-        'last_load_test',
-        'load_tests_results',
-    )
-)
+__all__ = (get_fake_node, random_string)

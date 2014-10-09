@@ -25,6 +25,7 @@ from fuelclient.cli.error import ParserException
 from fuelclient.cli.serializers import Serializer
 from fuelclient import profiler
 
+
 class Parser:
     """Parser class - encapsulates argparse's ArgumentParser
     and based on available actions, serializers and additional flags
@@ -95,14 +96,13 @@ class Parser:
         if os.environ.get('NAILGUN_LOAD_TEST'):
             handler_name = parsed_params.action
             method_name = ''.join([i for i in parsed_params.__dict__
-                                   if getattr(parsed_params, i) == True])
+                                   if getattr(parsed_params, i) is True])
             prof = profiler.Profiler(method_name, handler_name)
 
         actions[parsed_params.action].action_func(parsed_params)
 
         if os.environ.get('NAILGUN_LOAD_TEST'):
             prof.save_data()
-
 
     def add_serializers_args(self):
         for format_name in Serializer.serializers.keys():
